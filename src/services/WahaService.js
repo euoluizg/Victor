@@ -50,6 +50,76 @@ class WahaService {
         logger.error('Erro desconhecido ao tentar enviar requisição para WAHA.', { message: error.message, stack: error.stack });
       }
       throw error;
+  /**
+   * Obtém a lista de grupos em que o WhatsApp está conectado.
+   * @param {string} sessionName 
+   * @returns {Promise<Array>} Lista de grupos
+   */
+  async getGroups(sessionName = env.WAHA_SESSION) {
+    try {
+      const response = await this.api.get(`/api/${sessionName}/groups`);
+      return response.data;
+    } catch (error) {
+      logger.error('Erro ao buscar grupos do WAHA', { message: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém o status da sessão.
+   * @param {string} sessionName 
+   * @returns {Promise<Object>} Status da sessão
+   */
+  async getSessionStatus(sessionName = env.WAHA_SESSION) {
+    try {
+      const response = await this.api.get(`/api/sessions/${sessionName}`);
+      return response.data;
+    } catch (error) {
+      // Retorna objeto indicando que não existe se falhar com 404
+      if (error.response && error.response.status === 404) {
+        return { status: 'STOPPED' };
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Inicia a sessão.
+   * @param {string} sessionName 
+   */
+  async startSession(sessionName = env.WAHA_SESSION) {
+    try {
+      await this.api.post('/api/sessions/start', { name: sessionName });
+    } catch (error) {
+      logger.error('Erro ao iniciar sessão no WAHA', { message: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Para a sessão.
+   * @param {string} sessionName 
+   */
+  async stopSession(sessionName = env.WAHA_SESSION) {
+    try {
+      await this.api.post('/api/sessions/stop', { name: sessionName });
+    } catch (error) {
+      logger.error('Erro ao parar sessão no WAHA', { message: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Puxa o QR Code da sessão.
+   * @param {string} sessionName 
+   */
+  async getQrCode(sessionName = env.WAHA_SESSION) {
+    try {
+      const response = await this.api.get(`/api/sessions/${sessionName}/auth/qr?format=raw`);
+      return response.data; // Retorna dados binários ou string dependendo da API
+    } catch (error) {
+      logger.error('Erro ao buscar QR Code', { message: error.message });
+      throw error;
     }
   }
 }
