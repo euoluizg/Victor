@@ -374,12 +374,7 @@
 
                 if (statusText === 'SCAN_QR_CODE') {
                     qrContainer.style.display = 'block';
-                    // Tenta puxar o QR Code através da rota protegida do WAHA (Waha usa auth?)
-                    // Precisamos que o container waha não esteja exposto ou proxy
-                    // Se for no waha: http://SEU_IP:3000/api/sessions/default/auth/qr mas waha não tem ssl.
-                    // O app.js não tem proxy pro QR code, então precisamos bater na API do WAHA?
-                    // Espere, tem proxy configurado no Caddy? No Caddy, /waha/* vai pro waha:3000!
-                    document.getElementById('qrImage').src = `/waha/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
+                    document.getElementById('qrImage').src = `/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
                 } else {
                     qrContainer.style.display = 'none';
                 }
