@@ -25,10 +25,10 @@ class WahaService {
    * @param {string} option 
    * @returns {Promise<Object>} Resposta da API
    */
-  async sendPollVote(chatId, pollMessageId, option) {
+  async sendPollVote(chatId, pollMessageId, option, sessionName = env.WAHA_SESSION) {
     try {
       const payload = {
-        session: env.WAHA_SESSION,
+        session: sessionName,
         chatId: chatId,
         pollMessageId: pollMessageId,
         pollServerId: null,

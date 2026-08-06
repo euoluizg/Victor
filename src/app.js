@@ -1,6 +1,10 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import basicAuth from 'express-basic-auth';
 import webhookRoutes from './routes/webhook.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import dynamicConfig from './config/dynamicConfig.js';
 
 const app = express();
 
@@ -20,6 +24,44 @@ app.get('/', (req, res) => {
       </body>
     </html>
   `);
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Auth configuration for Admin Panel (uses the same credentials as WAHA to keep it simple)
+const adminAuth = basicAuth({
+  users: { [process.env.WAHA_DASHBOARD_USERNAME || 'admin']: process.env.WAHA_DASHBOARD_PASSWORD || 'Waha@123456' },
+  challenge: true,
+  realm: 'BotVote Admin'
+});
+
+// Admin Panel UI Route
+app.get('/admin', adminAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Admin API Routes
+app.get('/admin/api/settings', adminAuth, (req, res) => {
+  res.json({ targetGroups: dynamicConfig.getTargetGroups() });
+});
+
+app.post('/admin/api/settings', adminAuth, (req, res) => {
+  const { action, group } = req.body;
+  if (!action || !group) return res.status(400).json({ error: 'Missing action or group' });
+
+  let success = false;
+  if (action === 'add') {
+    success = dynamicConfig.addTargetGroup(group);
+  } else if (action === 'remove') {
+    success = dynamicConfig.removeTargetGroup(group);
+  }
+
+  if (success) {
+    res.status(200).json({ success: true, targetGroups: dynamicConfig.getTargetGroups() });
+  } else {
+    res.status(400).json({ error: 'Action failed or group already exists/not found' });
+  }
 });
 
 // Monta as rotas de webhook

@@ -37,7 +37,10 @@ class WebhookController {
         return;
       }
 
-      logger.info('Enquete recebida no webhook!', { pollName: poll.name, chatId: poll.chatId, group: poll.groupName });
+      // Injeta a sessão dinâmica que veio no webhook (ou usa a padrão como fallback)
+      poll.session = body.session || 'default';
+
+      logger.info('Enquete recebida no webhook!', { pollName: poll.name, chatId: poll.chatId, group: poll.groupName, session: poll.session });
 
       // Inicia processamento assíncrono (não bloqueia a response do express)
       voteService.processVote(poll).catch(err => {

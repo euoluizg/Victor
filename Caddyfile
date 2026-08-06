@@ -1,0 +1,12 @@
+botvote.melos.dev.br {
+    # Rota para o mini painel do bot (port 8080)
+    route /admin* {
+        reverse_proxy bot:8080
+    }
+    
+    # Rota padrão para o dashboard do waha (port 3000)
+    route {
+        redir / /dashboard/
+        reverse_proxy waha:3000
+    }
+}
