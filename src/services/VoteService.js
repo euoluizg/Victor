@@ -1,6 +1,7 @@
 import wahaService from './WahaService.js';
 import { env } from '../config/env.js';
 import { randomDelay } from '../utils/delay.js';
+import dynamicConfig from '../config/dynamicConfig.js';
 import logger from '../logger/index.js';
 
 class VoteService {
@@ -12,13 +13,15 @@ class VoteService {
    * @returns {boolean}
    */
   isGroupAuthorized(groupName) {
-    if (!env.TARGET_GROUPS || env.TARGET_GROUPS.length === 0) {
+    const targetGroups = dynamicConfig.getTargetGroups();
+
+    if (!targetGroups || targetGroups.length === 0) {
       logger.warn('Nenhum grupo configurado no TARGET_GROUPS. Permitindo votos para TODOS os grupos.');
       return true;
     }
     
     // Procura por correspondência exata de nome (ignorando maiúsculas/minúsculas)
-    return env.TARGET_GROUPS.some(
+    return targetGroups.some(
       (target) => target.toLowerCase() === groupName?.toLowerCase()
     );
   }
@@ -59,7 +62,7 @@ class VoteService {
       await randomDelay(env.VOTE_DELAY_MIN, env.VOTE_DELAY_MAX);
 
       // Envia Voto via WahaService
-      await wahaService.sendPollVote(poll.chatId, poll.pollMessageId, selectedOption);
+      await wahaService.sendPollVote(poll.chatId, poll.pollMessageId, selectedOption, poll.session);
 
       logger.info(`Voto na enquete "${poll.name}" realizado com sucesso!`, { chatId: poll.chatId });
     } catch (error) {

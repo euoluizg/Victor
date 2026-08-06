@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotVote - Painel Administrativo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --glass-bg: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.15) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-weight: 800;
+      font-size: 2.5rem;
+      background: linear-gradient(to right, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-muted);
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--glass-border);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .group-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .group-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .group-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .delete-btn {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .delete-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      transform: scale(1.05);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 0;
+      font-style: italic;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>BotVote</h1>
+      <p>Gerenciamento de Grupos Liberados</p>
+    </div>
+
+    <div class="glass-card">
+      <h2>Adicionar Grupo</h2>
+      <form id="addGroupForm" class="input-group">
+        <input type="text" id="groupName" placeholder="Digite o nome exato do grupo..." required autocomplete="off">
+        <button type="submit">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          Adicionar
+        </button>
+      </form>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+        Se a lista estiver vazia, o bot votará em TODOS os grupos.
+      </p>
+    </div>
+
+    <div class="glass-card">
+      <h2>Grupos Autorizados</h2>
+      <ul class="group-list" id="groupList">
+        <!-- Itens injetados via JS -->
+      </ul>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Atualizado com sucesso!</div>
+
+  <script>
+    const API_URL = '/admin/api/settings';
+    const groupList = document.getElementById('groupList');
+    const form = document.getElementById('addGroupForm');
+    const input = document.getElementById('groupName');
+    const toast = document.getElementById('toast');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    async function loadGroups() {
+      try {
+        groupList.innerHTML = '<div class="empty-state">Carregando...</div>';
+        const res = await fetch(API_URL);
+        if (res.status === 401) {
+          groupList.innerHTML = '<div class="empty-state">Não autorizado. Faça login.</div>';
+          return;
+        }
+        
+        const data = await res.json();
+        const groups = data.targetGroups || [];
+        
+        if (groups.length === 0) {
+          groupList.innerHTML = '<div class="empty-state">Nenhum grupo na lista.<br>O bot está votando em TODOS os grupos.</div>';
+          return;
+        }
+
+        groupList.innerHTML = '';
+        groups.forEach(group => {
+          const li = document.createElement('li');
+          li.className = 'group-item';
+          li.innerHTML = `
+            <span>${group}</span>
+            <button class="delete-btn" onclick="removeGroup('${group.replace(/'/g, "\\'")}')" title="Remover">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          `;
+          groupList.appendChild(li);
+        });
+      } catch (err) {
+        groupList.innerHTML = '<div class="empty-state">Erro ao carregar dados.</div>';
+      }
+    }
+
+    async function addGroup(e) {
+      e.preventDefault();
+      const groupName = input.value.trim();
+      if (!groupName) return;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add', group: groupName })
+        });
+        
+        if (res.ok) {
+          input.value = '';
+          await loadGroups();
+          showToast('Grupo adicionado!');
+        } else {
+          showToast('Erro ao adicionar (já existe?)');
+        }
+      } catch (err) {
+        showToast('Erro de conexão.');
+      }
+    }
+
+    async function removeGroup(groupName) {
+      if (!confirm(`Tem certeza que deseja remover "${groupName}"?`)) return;
+      
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'remove', group: groupName })
+        });
+        
+        if (res.ok) {
+          await loadGroups();
+          showToast('Grupo removido!');
+        }
+      } catch (err) {
+        showToast('Erro de conexão.');
+      }
+    }
+
+    form.addEventListener('submit', addGroup);
+    
+    // Load on init
+    loadGroups();
+  </script>
+</body>
+</html>

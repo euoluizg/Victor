@@ -7,9 +7,36 @@ services:
     environment:
       - WAHA_PRINT_QR=False
       - WAHA_API_KEY=12345
-      - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD=Waha@123456
-      - WHATSAPP_SWAGGER_USERNAME=admin
-      - WHATSAPP_SWAGGER_PASSWORD=Waha@123456    
-    
+      - WAHA_DASHBOARD_USERNAME=gibimba
+      - WAHA_DASHBOARD_PASSWORD=Pokebot367!
+      - WHATSAPP_SWAGGER_USERNAME=gibimba
+      - WHATSAPP_SWAGGER_PASSWORD=Pokebot367!    
     restart: unless-stopped
+
+  bot:
+    build: .
+    container_name: waha-auto-vote-bot
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/usr/src/app/data
+    environment:
+      - WAHA_URL=http://waha:3000
+      - WAHA_SESSION=default
+      - WAHA_API_KEY=12345
+      - PORT=8080
+    depends_on:
+      - waha
+
+  caddy:
+    image: caddy:alpine
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - waha
