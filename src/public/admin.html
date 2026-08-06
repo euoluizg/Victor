@@ -12,6 +12,7 @@
       --glass-border: rgba(255, 255, 255, 0.1);
       --primary: #8b5cf6;
       --primary-hover: #7c3aed;
+      --success: #10b981;
       --danger: #ef4444;
       --text: #f8fafc;
       --text-muted: #94a3b8;
@@ -60,7 +61,7 @@
       color: var(--text-muted);
     }
 
-    .glass-card {
+    .glass-panel {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -68,71 +69,52 @@
       border-radius: 1.5rem;
       padding: 2rem;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      margin-bottom: 1.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 8px;
+      transition: 0.3s;
+      font-weight: 600;
+    }
+
+    .tab:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tab.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     h2 {
       font-weight: 600;
       font-size: 1.25rem;
       margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
 
-    .input-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    input {
-      flex: 1;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--glass-border);
-      padding: 0.75rem 1rem;
-      border-radius: 0.75rem;
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.2s ease;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-    }
-
-    button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.75rem;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    button:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    .group-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
     }
 
     .group-item {
@@ -141,104 +123,105 @@
       align-items: center;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 0.75rem 1rem;
+      padding: 1rem;
       border-radius: 0.75rem;
-      transition: all 0.2s ease;
+      margin-bottom: 10px;
     }
 
-    .group-item:hover {
-      background: rgba(255, 255, 255, 0.05);
+    .group-name {
+      font-weight: 600;
+      margin-bottom: 4px;
     }
 
-    .delete-btn {
-      background: transparent;
+    .group-id {
+      font-size: 12px;
       color: var(--text-muted);
-      padding: 0.5rem;
-      border-radius: 0.5rem;
     }
 
-    .delete-btn:hover {
+    button {
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-add {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    .btn-add:hover {
+      background: rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-remove {
       background: rgba(239, 68, 68, 0.2);
       color: var(--danger);
-      transform: scale(1.05);
+    }
+    .btn-remove:hover {
+      background: rgba(239, 68, 68, 0.4);
     }
 
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 2rem 0;
-      font-style: italic;
+    .btn-refresh {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      margin-top: 15px;
+      padding: 1rem;
+    }
+    .btn-refresh:hover {
+      background: rgba(255,255,255,0.2);
     }
 
-    .toast {
+    #notification {
       position: fixed;
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      padding: 0.75rem 1.5rem;
+      padding: 1rem 2rem;
       border-radius: 2rem;
-      backdrop-filter: blur(12px);
+      color: white;
+      font-weight: 600;
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       z-index: 1000;
     }
 
-    .toast.show {
+    #notification.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }
+
+    /* QR Code e Status */
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .status-WORKING { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .status-SCAN_QR_CODE { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .status-STOPPED { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+    .qr-container {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      margin: 15px auto;
+      width: 250px;
+      height: 250px;
+    }
+    .qr-container img {
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="header">
-      <h1>BotVote</h1>
-      <p>Gerenciamento de Grupos Liberados</p>
-    </div>
-
-    <div class="glass-card">
-      <h2>Adicionar Grupo</h2>
-      <form id="addGroupForm" class="input-group">
-        <input type="text" id="groupName" placeholder="Digite o nome exato do grupo..." required autocomplete="off">
-        <button type="submit">
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          Adicionar
-        </button>
-      </form>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
-        Se a lista estiver vazia, o bot votará em TODOS os grupos.
-      </p>
-    </div>
-
-    <div class="glass-card">
-      <h2>Grupos Autorizados</h2>
-      <ul class="group-list" id="groupList">
-        <!-- Itens injetados via JS -->
-      </ul>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">✅ Atualizado com sucesso!</div>
-
-  <script>
-    const API_URL = '/admin/api/settings';
-    const groupList = document.getElementById('groupList');
-    const form = document.getElementById('addGroupForm');
-    const input = document.getElementById('groupName');
-    const toast = document.getElementById('toast');
-
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    async function loadGroups() {
-      try {
-        groupList.innerHTML = '<div class="empty-state">Carregando...</div>';
     <div class="container">
         <div class="header">
             <h1>BotVote Painel</h1>
@@ -390,9 +373,13 @@
                 container.innerHTML = `<span class="status-badge status-${statusText}">${statusName}</span>`;
 
                 if (statusText === 'SCAN_QR_CODE') {
-                    // Tenta puxar o QR Code. A rota original retorna a imagem direto, precisamos de usar a URL como src.
-                    qrContainer.style.display = 'inline-block';
-                    document.getElementById('qrImage').src = `/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
+                    qrContainer.style.display = 'block';
+                    // Tenta puxar o QR Code através da rota protegida do WAHA (Waha usa auth?)
+                    // Precisamos que o container waha não esteja exposto ou proxy
+                    // Se for no waha: http://SEU_IP:3000/api/sessions/default/auth/qr mas waha não tem ssl.
+                    // O app.js não tem proxy pro QR code, então precisamos bater na API do WAHA?
+                    // Espere, tem proxy configurado no Caddy? No Caddy, /waha/* vai pro waha:3000!
+                    document.getElementById('qrImage').src = `/waha/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
                 } else {
                     qrContainer.style.display = 'none';
                 }
