@@ -25,6 +25,8 @@ services:
       - WAHA_URL=http://waha:3000
       - WAHA_SESSION=default
       - WAHA_API_KEY=12345
+      - WAHA_DASHBOARD_USERNAME=${WAHA_DASHBOARD_USERNAME:-gibimba}
+      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD:-Pokebot367!}
       - PORT=8080
     depends_on:
       - waha
