@@ -239,84 +239,182 @@
     async function loadGroups() {
       try {
         groupList.innerHTML = '<div class="empty-state">Carregando...</div>';
-        const res = await fetch(API_URL);
-        if (res.status === 401) {
-          groupList.innerHTML = '<div class="empty-state">Não autorizado. Faça login.</div>';
-          return;
+    <div class="container">
+        <div class="header">
+            <h1>BotVote Painel</h1>
+            <p>Gerenciamento Centralizado</p>
+        </div>
+
+        <div class="glass-panel">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('groups')">📱 Grupos Autorizados</div>
+                <div class="tab" onclick="switchTab('connection')">🔌 Conexão WhatsApp</div>
+            </div>
+
+            <!-- Aba de Grupos -->
+            <div id="tab-groups" class="tab-content active">
+                <h2>Lista de Votação</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 15px;">
+                    Selecione os grupos do seu WhatsApp onde o bot está autorizado a votar.
+                </p>
+                <div id="groupsList" class="loading">Carregando seus grupos...</div>
+                <button class="btn-refresh" onclick="loadData()">🔄 Atualizar Lista</button>
+            </div>
+
+            <!-- Aba de Conexão -->
+            <div id="tab-connection" class="tab-content">
+                <h2>Status da Sessão</h2>
+                <div id="sessionStatusContainer" class="loading">Verificando...</div>
+                
+                <div style="text-align: center;">
+                    <div class="qr-container" id="qrContainer">
+                        <p style="color: black; margin-top:0;">Escaneie para conectar:</p>
+                        <img id="qrImage" src="" alt="QR Code" />
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-add" style="flex: 1;" onclick="startSession()">🚀 Iniciar Sessão</button>
+                    <button class="btn-refresh" style="flex: 1; margin: 0;" onclick="checkSession()">🔄 Checar Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification"></div>
+
+    <script>
+        let wahaGroups = [];
+        let targetGroups = [];
+
+        function showNotification(message, isError = false) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.style.background = isError ? 'var(--danger)' : 'var(--success)';
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 3000);
         }
-        
-        const data = await res.json();
-        const groups = data.targetGroups || [];
-        
-        if (groups.length === 0) {
-          groupList.innerHTML = '<div class="empty-state">Nenhum grupo na lista.<br>O bot está votando em TODOS os grupos.</div>';
-          return;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            if(tabId === 'connection') checkSession();
         }
 
-        groupList.innerHTML = '';
-        groups.forEach(group => {
-          const li = document.createElement('li');
-          li.className = 'group-item';
-          li.innerHTML = `
-            <span>${group}</span>
-            <button class="delete-btn" onclick="removeGroup('${group.replace(/'/g, "\\'")}')" title="Remover">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
-          `;
-          groupList.appendChild(li);
-        });
-      } catch (err) {
-        groupList.innerHTML = '<div class="empty-state">Erro ao carregar dados.</div>';
-      }
-    }
+        async function loadData() {
+            document.getElementById('groupsList').innerHTML = '<div class="loading">Carregando seus grupos do WhatsApp...</div>';
+            try {
+                // 1. Busca grupos autorizados no painel
+                const resConfig = await fetch('/admin/api/settings');
+                const configData = await resConfig.json();
+                targetGroups = configData.targetGroups || [];
 
-    async function addGroup(e) {
-      e.preventDefault();
-      const groupName = input.value.trim();
-      if (!groupName) return;
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'add', group: groupName })
-        });
-        
-        if (res.ok) {
-          input.value = '';
-          await loadGroups();
-          showToast('Grupo adicionado!');
-        } else {
-          showToast('Erro ao adicionar (já existe?)');
+                // 2. Busca grupos reais do WAHA
+                const resWaha = await fetch('/admin/api/waha/groups');
+                if (resWaha.ok) {
+                    wahaGroups = await resWaha.json();
+                    renderGroups();
+                } else {
+                    document.getElementById('groupsList').innerHTML = '<div class="loading" style="color:var(--danger)">Erro ao buscar grupos do WAHA. Verifique se o WhatsApp está conectado.</div>';
+                }
+            } catch (err) {
+                document.getElementById('groupsList').innerHTML = '<div class="loading" style="color:var(--danger)">Falha de conexão com a API.</div>';
+            }
         }
-      } catch (err) {
-        showToast('Erro de conexão.');
-      }
-    }
 
-    async function removeGroup(groupName) {
-      if (!confirm(`Tem certeza que deseja remover "${groupName}"?`)) return;
-      
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'remove', group: groupName })
-        });
-        
-        if (res.ok) {
-          await loadGroups();
-          showToast('Grupo removido!');
+        function renderGroups() {
+            const list = document.getElementById('groupsList');
+            list.innerHTML = '';
+            
+            if (!wahaGroups || wahaGroups.length === 0) {
+                list.innerHTML = '<div class="loading">Nenhum grupo encontrado no seu WhatsApp.</div>';
+                return;
+            }
+
+            wahaGroups.forEach(group => {
+                const isAuthorized = targetGroups.some(t => t.toLowerCase() === group.name?.toLowerCase());
+                
+                const item = document.createElement('div');
+                item.className = 'group-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="group-name">📁 ${group.name || 'Grupo sem nome'}</div>
+                        <div class="group-id">${group.id}</div>
+                    </div>
+                    <button class="${isAuthorized ? 'btn-remove' : 'btn-add'}" 
+                            onclick="toggleGroup('${group.name}', ${isAuthorized})">
+                        ${isAuthorized ? 'Remover ❌' : 'Adicionar ✅'}
+                    </button>
+                `;
+                list.appendChild(item);
+            });
         }
-      } catch (err) {
-        showToast('Erro de conexão.');
-      }
-    }
 
-    form.addEventListener('submit', addGroup);
-    
-    // Load on init
-    loadGroups();
-  </script>
+        async function toggleGroup(name, isRemoving) {
+            try {
+                const res = await fetch('/admin/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: isRemoving ? 'remove' : 'add', group: name })
+                });
+                
+                if (res.ok) {
+                    showNotification(`Grupo ${isRemoving ? 'removido' : 'adicionado'} com sucesso!`);
+                    loadData();
+                } else {
+                    showNotification('Falha ao processar grupo', true);
+                }
+            } catch (err) {
+                showNotification('Erro de conexão', true);
+            }
+        }
+
+        // --- ABA CONEXÃO WAHA --- //
+
+        async function checkSession() {
+            const container = document.getElementById('sessionStatusContainer');
+            const qrContainer = document.getElementById('qrContainer');
+            
+            try {
+                container.innerHTML = '<div class="loading">Buscando status...</div>';
+                const res = await fetch('/admin/api/waha/session');
+                const data = await res.json();
+                
+                let statusText = data.status || 'STOPPED';
+                let statusName = statusText === 'WORKING' ? 'Conectado ✅' : (statusText === 'SCAN_QR_CODE' ? 'Aguardando Leitura 📷' : 'Parado 🛑');
+                
+                container.innerHTML = `<span class="status-badge status-${statusText}">${statusName}</span>`;
+
+                if (statusText === 'SCAN_QR_CODE') {
+                    // Tenta puxar o QR Code. A rota original retorna a imagem direto, precisamos de usar a URL como src.
+                    qrContainer.style.display = 'inline-block';
+                    document.getElementById('qrImage').src = `/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
+                } else {
+                    qrContainer.style.display = 'none';
+                }
+
+            } catch (err) {
+                container.innerHTML = '<div class="loading" style="color:var(--danger)">Erro de conexão.</div>';
+                qrContainer.style.display = 'none';
+            }
+        }
+
+        async function startSession() {
+            try {
+                await fetch('/admin/api/waha/start', { method: 'POST' });
+                showNotification('Comando de iniciar enviado!');
+                setTimeout(checkSession, 2000);
+            } catch (e) {
+                showNotification('Erro ao iniciar', true);
+            }
+        }
+
+        // Auto load initial data
+        loadData();
+    </script>
 </body>
 </html>

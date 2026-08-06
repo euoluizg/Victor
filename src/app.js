@@ -5,6 +5,7 @@ import basicAuth from 'express-basic-auth';
 import webhookRoutes from './routes/webhook.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import dynamicConfig from './config/dynamicConfig.js';
+import wahaService from './services/WahaService.js';
 
 const app = express();
 
@@ -61,6 +62,33 @@ app.post('/admin/api/settings', adminAuth, (req, res) => {
     res.status(200).json({ success: true, targetGroups: dynamicConfig.getTargetGroups() });
   } else {
     res.status(400).json({ error: 'Action failed or group already exists/not found' });
+  }
+});
+
+app.get('/admin/api/waha/groups', adminAuth, async (req, res) => {
+  try {
+    const groups = await wahaService.getGroups();
+    res.json(groups);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar grupos do WAHA' });
+  }
+});
+
+app.get('/admin/api/waha/session', adminAuth, async (req, res) => {
+  try {
+    const session = await wahaService.getSessionStatus();
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar sessão' });
+  }
+});
+
+app.post('/admin/api/waha/start', adminAuth, async (req, res) => {
+  try {
+    await wahaService.startSession();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao iniciar sessão' });
   }
 });
 
