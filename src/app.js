@@ -107,6 +107,7 @@ app.get('/admin/api/waha/groups', adminAuth, async (req, res) => {
     const groups = await wahaService.getGroups();
     res.json(groups);
   } catch (error) {
+    logger.error('Erro na rota /admin/api/waha/groups', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Erro ao buscar grupos do WAHA' });
   }
 });
