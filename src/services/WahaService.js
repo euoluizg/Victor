@@ -61,15 +61,29 @@ class WahaService {
   async getGroups(sessionName = env.WAHA_SESSION) {
     try {
       const response = await this.api.get(`/api/${sessionName}/groups`);
+      let rawData = response.data;
       
-      // Sanitize response to prevent Express res.json() from crashing on BigInts or circular structures
-      if (response.data && Array.isArray(response.data)) {
-        return response.data.map(g => ({
-          id: g.id,
-          name: g.name || g.subject || 'Grupo'
-        }));
+      let groupsArray = [];
+      if (Array.isArray(rawData)) {
+        groupsArray = rawData;
+      } else if (rawData && typeof rawData === 'object') {
+        groupsArray = rawData.data || rawData.results || rawData.groups || [];
+        if (!Array.isArray(groupsArray)) {
+          groupsArray = Object.values(rawData).find(val => Array.isArray(val)) || [];
+        }
       }
-      return response.data;
+
+      // Sanitize and guarantee simple array of objects
+      return groupsArray.map(g => {
+        let groupId = g.id || g.jid || '';
+        if (typeof groupId === 'object' && groupId !== null) {
+          groupId = groupId._serialized || groupId.user || JSON.stringify(groupId);
+        }
+        return {
+          id: groupId,
+          name: g.name || g.subject || 'Grupo'
+        };
+      });
     } catch (error) {
       logger.error('Erro ao buscar grupos do WAHA', { message: error.message });
       throw error;
