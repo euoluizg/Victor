@@ -87,7 +87,7 @@ app.post('/admin/api/delay', adminAuth, (req, res) => {
 
 app.get('/admin/api/logs', adminAuth, (req, res) => {
   try {
-    const logFile = path.join(__dirname, '../../data/app.log');
+    const logFile = path.join(__dirname, '../data/app.log');
     if (fs.existsSync(logFile)) {
       const data = fs.readFileSync(logFile, 'utf8');
       const lines = data.split('\n').filter(Boolean);
