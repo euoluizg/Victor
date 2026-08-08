@@ -40,7 +40,7 @@
 
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 1000px;
     }
 
     .header {
@@ -218,6 +218,20 @@
       width: 100%;
       height: 100%;
     }
+
+    #console-logs {
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 1px solid #333;
+    }
   </style>
 </head>
 <body>
@@ -231,7 +245,8 @@
         <div class="glass-panel">
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('groups')">📱 Grupos Autorizados</div>
-                <div class="tab" onclick="switchTab('connection')">🔌 Conexão WhatsApp</div>
+                <div class="tab" onclick="switchTab('settings')">⚙️ Configurações (Delay)</div>
+                <div class="tab" onclick="switchTab('console')">🖥️ Console / Logs</div>
             </div>
 
             <!-- Aba de Grupos -->
@@ -244,22 +259,39 @@
                 <button class="btn-refresh" onclick="loadData()">🔄 Atualizar Lista</button>
             </div>
 
-            <!-- Aba de Conexão -->
-            <div id="tab-connection" class="tab-content">
-                <h2>Status da Sessão</h2>
-                <div id="sessionStatusContainer" class="loading">Verificando...</div>
+            <!-- Aba de Configurações -->
+            <div id="tab-settings" class="tab-content">
+                <h2>Configuração de Humanização (Delay)</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 15px;">
+                    Defina o tempo de espera aleatório (em milissegundos) antes do bot votar na enquete. 1000ms = 1 segundo.
+                </p>
                 
-                <div style="text-align: center;">
-                    <div class="qr-container" id="qrContainer">
-                        <p style="color: black; margin-top:0;">Escaneie para conectar:</p>
-                        <img id="qrImage" src="" alt="QR Code" />
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Delay Mínimo</label>
+                        <input type="number" id="delayMin" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none;" placeholder="Ex: 1000">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Delay Máximo</label>
+                        <input type="number" id="delayMax" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none;" placeholder="Ex: 5000">
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn-add" style="flex: 1;" onclick="startSession()">🚀 Iniciar Sessão</button>
-                    <button class="btn-refresh" style="flex: 1; margin: 0;" onclick="checkSession()">🔄 Checar Status</button>
+                <button class="btn-refresh" style="background: rgba(139, 92, 246, 0.5); border: 1px solid var(--primary);" onclick="saveDelayConfig()">💾 Salvar Configurações</button>
+            </div>
+
+            <!-- Aba de Console -->
+            <div id="tab-console" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Logs do Sistema (Ao Vivo)</h2>
+                    <div>
+                        <label style="font-size: 14px; margin-right: 10px;">
+                            <input type="checkbox" id="autoScroll" checked> Auto-Scroll
+                        </label>
+                        <button class="btn-refresh" style="margin: 0; padding: 5px 15px; width: auto;" onclick="fetchLogs()">🔄 Recarregar</button>
+                    </div>
                 </div>
+                <pre id="console-logs">Aguardando logs...</pre>
             </div>
         </div>
     </div>
@@ -269,6 +301,7 @@
     <script>
         let wahaGroups = [];
         let targetGroups = [];
+        let logInterval = null;
 
         function showNotification(message, isError = false) {
             const notif = document.getElementById('notification');
@@ -285,18 +318,31 @@
             event.target.classList.add('active');
             document.getElementById('tab-' + tabId).classList.add('active');
 
-            if(tabId === 'connection') checkSession();
+            // Gerencia o polling de logs
+            if (logInterval) clearInterval(logInterval);
+            if (tabId === 'console') {
+                fetchLogs();
+                logInterval = setInterval(fetchLogs, 3000);
+            }
         }
 
         async function loadData() {
             document.getElementById('groupsList').innerHTML = '<div class="loading">Carregando seus grupos do WhatsApp...</div>';
             try {
-                // 1. Busca grupos autorizados no painel
+                // Busca configurações de atraso
+                const resDelay = await fetch('/admin/api/delay');
+                if (resDelay.ok) {
+                    const delayData = await resDelay.json();
+                    document.getElementById('delayMin').value = delayData.delayMin;
+                    document.getElementById('delayMax').value = delayData.delayMax;
+                }
+
+                // Busca grupos autorizados no painel
                 const resConfig = await fetch('/admin/api/settings');
                 const configData = await resConfig.json();
                 targetGroups = configData.targetGroups || [];
 
-                // 2. Busca grupos reais do WAHA
+                // Busca grupos reais do WAHA
                 const resWaha = await fetch('/admin/api/waha/groups');
                 if (resWaha.ok) {
                     wahaGroups = await resWaha.json();
@@ -356,42 +402,44 @@
             }
         }
 
-        // --- ABA CONEXÃO WAHA --- //
+        async function saveDelayConfig() {
+            const min = document.getElementById('delayMin').value;
+            const max = document.getElementById('delayMax').value;
 
-        async function checkSession() {
-            const container = document.getElementById('sessionStatusContainer');
-            const qrContainer = document.getElementById('qrContainer');
-            
             try {
-                container.innerHTML = '<div class="loading">Buscando status...</div>';
-                const res = await fetch('/admin/api/waha/session');
-                const data = await res.json();
+                const res = await fetch('/admin/api/delay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ min: min, max: max })
+                });
                 
-                let statusText = data.status || 'STOPPED';
-                let statusName = statusText === 'WORKING' ? 'Conectado ✅' : (statusText === 'SCAN_QR_CODE' ? 'Aguardando Leitura 📷' : 'Parado 🛑');
-                
-                container.innerHTML = `<span class="status-badge status-${statusText}">${statusName}</span>`;
-
-                if (statusText === 'SCAN_QR_CODE') {
-                    qrContainer.style.display = 'block';
-                    document.getElementById('qrImage').src = `/api/sessions/default/auth/qr?format=raw&timestamp=${Date.now()}`;
+                if (res.ok) {
+                    showNotification('Configurações de delay salvas com sucesso!');
                 } else {
-                    qrContainer.style.display = 'none';
+                    showNotification('Falha ao salvar configurações (Verifique se Min < Max)', true);
                 }
-
             } catch (err) {
-                container.innerHTML = '<div class="loading" style="color:var(--danger)">Erro de conexão.</div>';
-                qrContainer.style.display = 'none';
+                showNotification('Erro de conexão', true);
             }
         }
 
-        async function startSession() {
+        async function fetchLogs() {
             try {
-                await fetch('/admin/api/waha/start', { method: 'POST' });
-                showNotification('Comando de iniciar enviado!');
-                setTimeout(checkSession, 2000);
-            } catch (e) {
-                showNotification('Erro ao iniciar', true);
+                const res = await fetch('/admin/api/logs');
+                if (res.ok) {
+                    const data = await res.json();
+                    const consoleEl = document.getElementById('console-logs');
+                    
+                    // Apenas atualiza se mudou, para evitar piscar e quebrar seleções
+                    if (consoleEl.textContent !== data.logs) {
+                        consoleEl.textContent = data.logs || 'Sem logs disponíveis.';
+                        if (document.getElementById('autoScroll').checked) {
+                            consoleEl.scrollTop = consoleEl.scrollHeight;
+                        }
+                    }
+                }
+            } catch (err) {
+                document.getElementById('console-logs').textContent = 'Falha ao conectar com o servidor para buscar logs...';
             }
         }
 

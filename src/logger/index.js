@@ -1,4 +1,10 @@
 import winston from 'winston';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const logFile = path.join(__dirname, '../../data/app.log');
 
 const { combine, timestamp, printf, errors, json } = winston.format;
 
@@ -21,7 +27,8 @@ const logger = winston.createLogger({
     myFormat
   ),
   transports: [
-    new winston.transports.Console()
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: logFile, maxsize: 5242880, maxFiles: 1 }) // 5MB max
   ],
 });
 

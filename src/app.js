@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import basicAuth from 'express-basic-auth';
 import webhookRoutes from './routes/webhook.js';
@@ -62,6 +63,42 @@ app.post('/admin/api/settings', adminAuth, (req, res) => {
     res.status(200).json({ success: true, targetGroups: dynamicConfig.getTargetGroups() });
   } else {
     res.status(400).json({ error: 'Action failed or group already exists/not found' });
+  }
+});
+
+app.get('/admin/api/delay', adminAuth, (req, res) => {
+  res.json(dynamicConfig.getDelayConfig());
+});
+
+app.post('/admin/api/delay', adminAuth, (req, res) => {
+  const { min, max } = req.body;
+  if (min === undefined || max === undefined) {
+    return res.status(400).json({ error: 'Missing min or max delay' });
+  }
+
+  const success = dynamicConfig.updateDelayConfig(min, max);
+  
+  if (success) {
+    res.status(200).json({ success: true, ...dynamicConfig.getDelayConfig() });
+  } else {
+    res.status(400).json({ error: 'Invalid delay values' });
+  }
+});
+
+app.get('/admin/api/logs', adminAuth, (req, res) => {
+  try {
+    const logFile = path.join(__dirname, '../../data/app.log');
+    if (fs.existsSync(logFile)) {
+      const data = fs.readFileSync(logFile, 'utf8');
+      const lines = data.split('\n').filter(Boolean);
+      // Return the last 300 lines for the console
+      const tail = lines.slice(-300).join('\n');
+      res.json({ logs: tail });
+    } else {
+      res.json({ logs: 'Aguardando primeiros logs...' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao ler logs' });
   }
 });
 
