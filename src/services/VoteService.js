@@ -9,10 +9,10 @@ class VoteService {
    * Verifica se o grupo está na whitelist (TARGET_GROUPS)
    * Se TARGET_GROUPS estiver vazio na configuração, consideramos que TODOS os grupos estão liberados
    * (embora a spec peça whitelist configurável, esta é uma boa prática defensiva).
-   * @param {string} groupName 
+   * @param {string} chatId 
    * @returns {boolean}
    */
-  isGroupAuthorized(groupName) {
+  isGroupAuthorized(chatId) {
     const targetGroups = dynamicConfig.getTargetGroups();
 
     if (!targetGroups || targetGroups.length === 0) {
@@ -20,9 +20,9 @@ class VoteService {
       return true;
     }
     
-    // Procura por correspondência exata de nome (ignorando maiúsculas/minúsculas)
+    // Procura por correspondência exata do ID do grupo (chatId)
     return targetGroups.some(
-      (target) => target.toLowerCase() === groupName?.toLowerCase()
+      (target) => target === chatId
     );
   }
 
@@ -37,10 +37,10 @@ class VoteService {
    */
   async processVote(poll) {
     try {
-      logger.info('Iniciando processamento de voto para enquete...', { pollName: poll.name, group: poll.groupName });
+      logger.info('Iniciando processamento de voto para enquete...', { pollName: poll.name, chatId: poll.chatId, groupName: poll.groupName });
 
-      if (!this.isGroupAuthorized(poll.groupName)) {
-        logger.warn(`Grupo "${poll.groupName}" não autorizado pela whitelist. Voto ignorado.`);
+      if (!this.isGroupAuthorized(poll.chatId)) {
+        logger.warn(`Grupo ID "${poll.chatId}" (Nome: "${poll.groupName}") não autorizado pela whitelist. Voto ignorado.`);
         return;
       }
 

@@ -339,7 +339,7 @@
             }
 
             wahaGroups.forEach(group => {
-                const isAuthorized = targetGroups.some(t => t.toLowerCase() === group.name?.toLowerCase());
+                const isAuthorized = targetGroups.some(t => t === group.id);
                 
                 const item = document.createElement('div');
                 item.className = 'group-item';
@@ -349,7 +349,7 @@
                         <div class="group-id">${group.id}</div>
                     </div>
                     <button class="${isAuthorized ? 'btn-remove' : 'btn-add'}" 
-                            onclick="toggleGroup('${group.name}', ${isAuthorized})">
+                            onclick="toggleGroup('${group.id}', ${isAuthorized})">
                         ${isAuthorized ? 'Remover ❌' : 'Adicionar ✅'}
                     </button>
                 `;
@@ -357,12 +357,12 @@
             });
         }
 
-        async function toggleGroup(name, isRemoving) {
+        async function toggleGroup(id, isRemoving) {
             try {
                 const res = await fetch('/admin/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: isRemoving ? 'remove' : 'add', group: name })
+                    body: JSON.stringify({ action: isRemoving ? 'remove' : 'add', group: id })
                 });
                 
                 if (res.ok) {
