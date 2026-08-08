@@ -14,7 +14,7 @@ class WahaService {
         'Content-Type': 'application/json',
         'X-Api-Key': env.WAHA_API_KEY,
       },
-      timeout: 10000,
+      timeout: 60000,
     });
   }
 
