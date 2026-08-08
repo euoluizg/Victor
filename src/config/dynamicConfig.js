@@ -14,7 +14,8 @@ class DynamicConfig {
     this.settings = {
       targetGroups: env.TARGET_GROUPS || [],
       delayMin: env.VOTE_DELAY_MIN || 0,
-      delayMax: env.VOTE_DELAY_MAX || 500
+      delayMax: env.VOTE_DELAY_MAX || 500,
+      voteOption: 1
     };
     this.ensureDataDir();
     this.load();
@@ -84,20 +85,23 @@ class DynamicConfig {
   getDelayConfig() {
     return {
       delayMin: this.settings.delayMin !== undefined ? this.settings.delayMin : env.VOTE_DELAY_MIN || 0,
-      delayMax: this.settings.delayMax !== undefined ? this.settings.delayMax : env.VOTE_DELAY_MAX || 500
+      delayMax: this.settings.delayMax !== undefined ? this.settings.delayMax : env.VOTE_DELAY_MAX || 500,
+      voteOption: this.settings.voteOption !== undefined ? this.settings.voteOption : 1
     };
   }
 
-  updateDelayConfig(min, max) {
+  updateDelayConfig(min, max, voteOption) {
     const minVal = parseInt(min, 10);
     const maxVal = parseInt(max, 10);
+    const optionVal = parseInt(voteOption, 10);
     
-    if (isNaN(minVal) || isNaN(maxVal) || minVal < 0 || maxVal < minVal) {
+    if (isNaN(minVal) || isNaN(maxVal) || minVal < 0 || maxVal < minVal || isNaN(optionVal) || optionVal < 1) {
       return false;
     }
 
     this.settings.delayMin = minVal;
     this.settings.delayMax = maxVal;
+    this.settings.voteOption = optionVal;
     this.save();
     return true;
   }

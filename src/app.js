@@ -71,12 +71,12 @@ app.get('/admin/api/delay', adminAuth, (req, res) => {
 });
 
 app.post('/admin/api/delay', adminAuth, (req, res) => {
-  const { min, max } = req.body;
-  if (min === undefined || max === undefined) {
-    return res.status(400).json({ error: 'Missing min or max delay' });
+  const { min, max, voteOption } = req.body;
+  if (min === undefined || max === undefined || voteOption === undefined) {
+    return res.status(400).json({ error: 'Missing min, max or voteOption' });
   }
 
-  const success = dynamicConfig.updateDelayConfig(min, max);
+  const success = dynamicConfig.updateDelayConfig(min, max, voteOption);
   
   if (success) {
     res.status(200).json({ success: true, ...dynamicConfig.getDelayConfig() });
