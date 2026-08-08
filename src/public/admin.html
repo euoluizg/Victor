@@ -329,7 +329,8 @@
                     document.getElementById('groupsList').innerHTML = '<div class="loading" style="color:var(--danger)">Erro ao buscar grupos do WAHA. Verifique se o WhatsApp está conectado.</div>';
                 }
             } catch (err) {
-                document.getElementById('groupsList').innerHTML = '<div class="loading" style="color:var(--danger)">Falha de conexão com a API.</div>';
+                console.error("Erro no loadData:", err);
+                document.getElementById('groupsList').innerHTML = `<div class="loading" style="color:var(--danger)">Erro no Painel: ${err.message}</div>`;
             }
         }
 
