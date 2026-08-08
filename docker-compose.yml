@@ -13,7 +13,7 @@ services:
       - WHATSAPP_SWAGGER_PASSWORD=Pokebot367!
       - WHATSAPP_HOOK_URL=http://bot:8080/webhook
       - WHATSAPP_HOOK_EVENTS=message
-      - WHATSAPP_DEFAULT_ENGINE=NOWEB
+      - WHATSAPP_DEFAULT_ENGINE=WEBJS
     volumes:
       - ./waha-data:/app/.sessions
     restart: unless-stopped
