@@ -59,7 +59,8 @@ class VoteService {
       logger.info(`Opção escolhida para votar: "${selectedOption}"`);
 
       // Humanização do bot (Delay)
-      await randomDelay(env.VOTE_DELAY_MIN, env.VOTE_DELAY_MAX);
+      const delayConfig = dynamicConfig.getDelayConfig();
+      await randomDelay(delayConfig.delayMin, delayConfig.delayMax);
 
       // Envia Voto via WahaService
       await wahaService.sendPollVote(poll.chatId, poll.pollMessageId, selectedOption, poll.session);

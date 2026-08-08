@@ -12,7 +12,9 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 class DynamicConfig {
   constructor() {
     this.settings = {
-      targetGroups: env.TARGET_GROUPS || []
+      targetGroups: env.TARGET_GROUPS || [],
+      delayMin: env.VOTE_DELAY_MIN || 0,
+      delayMax: env.VOTE_DELAY_MAX || 500
     };
     this.ensureDataDir();
     this.load();
@@ -77,6 +79,27 @@ class DynamicConfig {
       return true;
     }
     return false;
+  }
+
+  getDelayConfig() {
+    return {
+      delayMin: this.settings.delayMin !== undefined ? this.settings.delayMin : env.VOTE_DELAY_MIN || 0,
+      delayMax: this.settings.delayMax !== undefined ? this.settings.delayMax : env.VOTE_DELAY_MAX || 500
+    };
+  }
+
+  updateDelayConfig(min, max) {
+    const minVal = parseInt(min, 10);
+    const maxVal = parseInt(max, 10);
+    
+    if (isNaN(minVal) || isNaN(maxVal) || minVal < 0 || maxVal < minVal) {
+      return false;
+    }
+
+    this.settings.delayMin = minVal;
+    this.settings.delayMax = maxVal;
+    this.save();
+    return true;
   }
 }
 
