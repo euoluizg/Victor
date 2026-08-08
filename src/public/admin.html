@@ -251,6 +251,12 @@
                     </div>
                 </div>
 
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Opção de Voto (1, 2, 3...)</label>
+                    <input type="number" id="voteOption" min="1" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none;" placeholder="1 para a primeira, 2 para a segunda...">
+                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">Digite o número da opção (ex: 1 para votar na primeira opção da enquete).</p>
+                </div>
+
                 <button class="btn-refresh" style="background: rgba(139, 92, 246, 0.5); border: 1px solid var(--primary);" onclick="saveDelayConfig()">💾 Salvar Configurações</button>
             </div>
 
@@ -301,20 +307,18 @@
         }
 
         async function loadData() {
-            document.getElementById('groupsList').innerHTML = '<div class="loading">Carregando seus grupos do WhatsApp...</div>';
+            document.getElementById('groupsList').innerHTML = '<div class="loading">Carregando seus grupos...</div>';
             try {
-                // Busca configurações de atraso
-                const resDelay = await fetch('/admin/api/delay');
-                if (resDelay.ok) {
-                    const delayData = await resDelay.json();
-                    document.getElementById('delayMin').value = delayData.delayMin;
-                    document.getElementById('delayMax').value = delayData.delayMax;
-                }
-
-                // Busca grupos autorizados no painel
+                // Configurações
                 const resConfig = await fetch('/admin/api/settings');
                 const configData = await resConfig.json();
                 targetGroups = configData.targetGroups || [];
+
+                const resDelay = await fetch('/admin/api/delay');
+                const delayData = await resDelay.json();
+                document.getElementById('delayMin').value = delayData.delayMin !== undefined ? delayData.delayMin : '';
+                document.getElementById('delayMax').value = delayData.delayMax !== undefined ? delayData.delayMax : '';
+                document.getElementById('voteOption').value = delayData.voteOption !== undefined ? delayData.voteOption : '1';
 
                 // Busca grupos reais do WAHA
                 const resWaha = await fetch('/admin/api/waha/groups');
@@ -381,12 +385,13 @@
         async function saveDelayConfig() {
             const min = document.getElementById('delayMin').value;
             const max = document.getElementById('delayMax').value;
+            const voteOption = document.getElementById('voteOption').value;
 
             try {
                 const res = await fetch('/admin/api/delay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ min: min, max: max })
+                    body: JSON.stringify({ min, max, voteOption })
                 });
                 
                 if (res.ok) {

@@ -44,23 +44,23 @@ class VoteService {
         return;
       }
 
-      // Determina a opção de voto. Se a opção DEFAULT_VOTE não estiver nas opções da enquete, escolhe a primeira opção.
-      let selectedOption = poll.options[0]; // fallback
-      
-      if (env.DEFAULT_VOTE) {
-        const exactMatch = poll.options.find(o => o.toLowerCase() === env.DEFAULT_VOTE.toLowerCase());
-        if (exactMatch) {
-          selectedOption = exactMatch;
-        } else {
-          logger.warn(`A opção padrão "${env.DEFAULT_VOTE}" não foi encontrada nesta enquete. Usando a primeira opção ("${selectedOption}").`);
-        }
-      }
-
-      logger.info(`Opção escolhida para votar: "${selectedOption}"`);
-
       // Humanização do bot (Delay)
       const delayConfig = dynamicConfig.getDelayConfig();
       await randomDelay(delayConfig.delayMin, delayConfig.delayMax);
+
+      // Determina a opção de voto usando o índice configurado (1 para a primeira, 2 para a segunda...)
+      let optionIndex = (delayConfig.voteOption || 1) - 1;
+      
+      // Se a opção configurada for maior do que o número de opções, cai para a última opção
+      if (optionIndex >= poll.options.length) {
+        logger.warn(`Opção configurada (${optionIndex + 1}) excede o total de opções na enquete (${poll.options.length}). Votando na última opção.`);
+        optionIndex = poll.options.length - 1;
+      }
+
+      const selectedOption = poll.options[optionIndex];
+      logger.info(`Opção escolhida para votar: "${selectedOption}"`);
+
+
 
       // Envia Voto via WahaService
       await wahaService.sendPollVote(poll.chatId, poll.pollMessageId, selectedOption, poll.session);
