@@ -50,6 +50,9 @@ class WahaService {
         logger.error('Erro desconhecido ao tentar enviar requisição para WAHA.', { message: error.message, stack: error.stack });
       }
       throw error;
+    }
+  }
+
   /**
    * Obtém a lista de grupos em que o WhatsApp está conectado.
    * @param {string} sessionName 
