@@ -60,7 +60,7 @@ class WahaService {
    */
   async getGroups(sessionName = env.WAHA_SESSION) {
     try {
-      const response = await this.api.get(`/api/sessions/${sessionName}/groups`);
+      const response = await this.api.get(`/api/groups?session=${sessionName}`);
       
       // Sanitize response to prevent Express res.json() from crashing on BigInts or circular structures
       if (response.data && Array.isArray(response.data)) {
