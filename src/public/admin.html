@@ -339,17 +339,19 @@
             }
 
             wahaGroups.forEach(group => {
-                const isAuthorized = targetGroups.some(t => t === group.id);
+                // WAHA engines like Baileys might return group.id as an object (e.g., { _serialized: '...' })
+                const groupId = typeof group.id === 'string' ? group.id : (group.id?._serialized || group.id);
+                const isAuthorized = targetGroups.some(t => t === groupId);
                 
                 const item = document.createElement('div');
                 item.className = 'group-item';
                 item.innerHTML = `
                     <div>
                         <div class="group-name">📁 ${group.name || 'Grupo sem nome'}</div>
-                        <div class="group-id">${group.id}</div>
+                        <div class="group-id">${groupId}</div>
                     </div>
                     <button class="${isAuthorized ? 'btn-remove' : 'btn-add'}" 
-                            onclick="toggleGroup('${group.id}', ${isAuthorized})">
+                            onclick="toggleGroup('${groupId}', ${isAuthorized})">
                         ${isAuthorized ? 'Remover ❌' : 'Adicionar ✅'}
                     </button>
                 `;
